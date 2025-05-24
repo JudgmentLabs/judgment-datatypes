@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
-from judgeval.evaluation_run import EvaluationRun
+from judgeval.data.evaluation_run import EvaluationRun
 from judgeval.data.tool import Tool
 import json
 from datetime import datetime, timezone
