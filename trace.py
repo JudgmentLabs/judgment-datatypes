@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
-from judgeval.data.evaluation_run import EvaluationRun
 from judgeval.data.tool import Tool
 import json
 from datetime import datetime, timezone
@@ -27,7 +26,6 @@ class TraceSpan(BaseModel):
     usage: Optional[TraceUsage] = None
     duration: Optional[float] = None
     annotation: Optional[List[Dict[str, Any]]] = None
-    evaluation_runs: Optional[List[EvaluationRun]] = []
     expected_tools: Optional[List[Tool]] = None
     additional_metadata: Optional[Dict[str, Any]] = None
 
@@ -40,7 +38,6 @@ class TraceSpan(BaseModel):
             "created_at": datetime.fromtimestamp(self.created_at, tz=timezone.utc).isoformat(),
             "inputs": self._serialize_inputs(),
             "output": self._serialize_output(),
-            "evaluation_runs": [run.model_dump() for run in self.evaluation_runs] if self.evaluation_runs else [],
             "parent_span_id": self.parent_span_id,
             "function": self.function,
             "duration": self.duration,
