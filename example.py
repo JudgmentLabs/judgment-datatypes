@@ -38,6 +38,8 @@ class Example(BaseModel):
     example_index: Optional[int] = None
     timestamp: Optional[str] = None
     trace_id: Optional[str] = None
+    trace_span_id: Optional[str] = None
+    dataset_id: Optional[str] = None
     
     def __init__(self, **data):
         if 'example_id' not in data:

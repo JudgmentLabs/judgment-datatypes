@@ -60,7 +60,7 @@ def generate_scoring_result(
     When an LLMTestCase is executed, it turns into an LLMApiTestCase and the progress of the evaluation run is tracked.
     At the end of the evaluation run, we create a TestResult object out of the completed LLMApiTestCase.
     """
-    if data_object.name is not None:
+    if hasattr(data_object, "name") and data_object.name is not None:
         name = data_object.name
     else:
         name = "Test Case Placeholder"

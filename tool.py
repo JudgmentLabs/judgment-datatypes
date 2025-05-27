@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_serializer
 from typing import Dict, Any, Optional
 import warnings
 
@@ -24,3 +24,12 @@ class Tool(BaseModel):
         if v is not None and not isinstance(v, str):
             warnings.warn(f"Agent name should be a string, got {type(v)}", UserWarning)
         return v
+
+    @model_serializer
+    def serialize_model(self) -> Dict[str, Any]:
+        """Pydantic model serializer for JSON compatibility"""
+        return {
+            "tool_name": self.tool_name,
+            "parameters": self.parameters,
+            "agent_name": self.agent_name
+        }
