@@ -76,7 +76,7 @@ def create_scorer_data(scorer: JudgevalScorer) -> ScorerData:
             score=scorer.score,
             threshold=scorer.threshold,
             reason=scorer.reason,
-            success=scorer._success_check(),
+            success=scorer.success_check(),
             strict_mode=scorer.strict_mode,
             evaluation_model=scorer.evaluation_model,
             error=None,
