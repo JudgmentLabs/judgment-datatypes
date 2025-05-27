@@ -28,6 +28,7 @@ class TraceSpan(BaseModel):
     annotation: Optional[List[Dict[str, Any]]] = None
     expected_tools: Optional[List[Tool]] = None
     additional_metadata: Optional[Dict[str, Any]] = None
+    has_evaluation: Optional[bool] = False
 
     def model_dump(self, **kwargs):
         return {
@@ -42,7 +43,8 @@ class TraceSpan(BaseModel):
             "function": self.function,
             "duration": self.duration,
             "span_type": self.span_type,
-            "usage": self.usage.model_dump() if self.usage else None
+            "usage": self.usage.model_dump() if self.usage else None,
+            "has_evaluation": self.has_evaluation
         }
     
     def print_span(self):
