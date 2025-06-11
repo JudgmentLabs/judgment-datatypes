@@ -57,8 +57,9 @@ def create_scorer_data(scorer: JudgevalScorer) -> ScorerData:
     contains the output of the scorer run that can be exported to be logged as a part of
     the ScorerResult.
     """
+    scorers_result = list()
     if scorer.error is not None:  # error occurred during eval run
-        return ScorerData(
+        scorers_result.append(ScorerData(
             name=scorer.__name__,
             threshold=scorer.threshold,
             score=None,
@@ -69,9 +70,9 @@ def create_scorer_data(scorer: JudgevalScorer) -> ScorerData:
             error=scorer.error,
             evaluation_cost=scorer.evaluation_cost,
             verbose_logs=scorer.verbose_logs,
-        )
+        ))
     else:  # standard execution, no error
-        return ScorerData(
+        scorers_result.append(ScorerData(
             name=scorer.__name__,
             score=scorer.score,
             threshold=scorer.threshold,
@@ -83,4 +84,33 @@ def create_scorer_data(scorer: JudgevalScorer) -> ScorerData:
             evaluation_cost=scorer.evaluation_cost,
             verbose_logs=scorer.verbose_logs,
             additional_metadata=scorer.additional_metadata,
-        )
+        ))
+    if hasattr(scorer, 'internal_scorer') and scorer.internal_scorer is not None:
+        if scorer.internal_scorer.error is not None:
+            scorers_result.append(ScorerData(
+                name=scorer.internal_scorer.__name__,
+                score=None,
+                threshold=scorer.internal_scorer.threshold,
+                reason=None,
+                success=False,
+                strict_mode=scorer.internal_scorer.strict_mode,
+                evaluation_model=scorer.internal_scorer.evaluation_model,
+                error=scorer.internal_scorer.error,
+                evaluation_cost=scorer.internal_scorer.evaluation_cost,
+                verbose_logs=scorer.internal_scorer.verbose_logs
+            ))
+        else:
+            scorers_result.append(ScorerData(
+                name=scorer.internal_scorer.__name__,
+                score=scorer.internal_scorer.score,
+                threshold=scorer.internal_scorer.threshold,
+                reason=scorer.internal_scorer.reason,
+                success=scorer.internal_scorer.success_check(),
+                strict_mode=scorer.internal_scorer.strict_mode,
+                evaluation_model=scorer.internal_scorer.evaluation_model,
+                error=None,
+                evaluation_cost=scorer.internal_scorer.evaluation_cost,
+                verbose_logs=scorer.internal_scorer.verbose_logs,
+                additional_metadata=scorer.internal_scorer.additional_metadata,
+            ))
+    return scorers_result

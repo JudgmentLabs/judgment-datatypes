@@ -16,12 +16,13 @@ class TraceUsage(BaseModel):
 class TraceSpan(BaseModel):
     span_id: str
     trace_id: str
-    function: Optional[str] = None
+    function: str
     depth: int
     created_at: Optional[Any] = None
     parent_span_id: Optional[str] = None
     span_type: Optional[str] = "span"
     inputs: Optional[Dict[str, Any]] = None
+    error: Optional[Dict[str, Any]] = None
     output: Optional[Any] = None
     usage: Optional[TraceUsage] = None
     duration: Optional[float] = None
@@ -29,6 +30,15 @@ class TraceSpan(BaseModel):
     expected_tools: Optional[List[Tool]] = None
     additional_metadata: Optional[Dict[str, Any]] = None
     has_evaluation: Optional[bool] = False
+    agent_name: Optional[str] = None
+    state_before: Optional[Dict[str, Any]] = None
+    state_after: Optional[Dict[str, Any]] = None
+    
+    def get_name(self):
+        if self.agent_name:
+            return f"{self.agent_name}.{self.function}"
+        else:
+            return self.function
 
     def model_dump(self, **kwargs):
         return {
@@ -37,14 +47,18 @@ class TraceSpan(BaseModel):
             "depth": self.depth,
 #             "created_at": datetime.fromtimestamp(self.created_at).isoformat(),
             "created_at": datetime.fromtimestamp(self.created_at, tz=timezone.utc).isoformat(),
-            "inputs": self._serialize_inputs(),
-            "output": self._serialize_output(),
+            "inputs": self._serialize_value(self.inputs),
+            "output": self._serialize_value(self.output),
+            "error": self._serialize_value(self.error),
             "parent_span_id": self.parent_span_id,
             "function": self.function,
             "duration": self.duration,
             "span_type": self.span_type,
             "usage": self.usage.model_dump() if self.usage else None,
-            "has_evaluation": self.has_evaluation
+            "has_evaluation": self.has_evaluation,
+            "agent_name": self.agent_name,
+            "state_before": self.state_before,
+            "state_after": self.state_after
         }
     
     def print_span(self):
@@ -53,30 +67,6 @@ class TraceSpan(BaseModel):
         parent_info = f" (parent_id: {self.parent_span_id})" if self.parent_span_id else ""
         print(f"{indent}→ {self.function} (id: {self.span_id}){parent_info}")
     
-    def _serialize_inputs(self) -> dict:
-        """Helper method to serialize input data safely."""
-        if self.inputs is None:
-            return {}
-            
-        serialized_inputs = {}
-        for key, value in self.inputs.items():
-            if isinstance(value, BaseModel):
-                serialized_inputs[key] = value.model_dump()
-            elif isinstance(value, (list, tuple)):
-                # Handle lists/tuples of arguments
-                serialized_inputs[key] = [
-                    item.model_dump() if isinstance(item, BaseModel)
-                    else None if not self._is_json_serializable(item)
-                    else item
-                    for item in value
-                ]
-            else:
-                if self._is_json_serializable(value):
-                    serialized_inputs[key] = value
-                else:
-                    serialized_inputs[key] = self.safe_stringify(value, self.function)
-        return serialized_inputs
-
     def _is_json_serializable(self, obj: Any) -> bool:
         """Helper method to check if an object is JSON serializable."""
         try:
@@ -99,14 +89,11 @@ class TraceSpan(BaseModel):
         except (TypeError, OverflowError, ValueError):
             pass
 
-        warnings.warn(
-            f"Output for function {function_name} is not JSON serializable and could not be converted to string. Setting to None."
-        )
         return None
         
-    def _serialize_output(self) -> Any:
-        """Helper method to serialize output data safely."""
-        if self.output is None:
+    def _serialize_value(self, value: Any) -> Any:
+        """Helper method to deep serialize a value safely supporting Pydantic Models / regular PyObjects."""
+        if value is None:
             return None
             
         def serialize_value(value):
@@ -127,17 +114,19 @@ class TraceSpan(BaseModel):
                     # Fallback to safe stringification
                     return self.safe_stringify(value, self.function)
 
-        # Start serialization with the top-level output
-        return serialize_value(self.output)
+        # Start serialization with the top-level value
+        return serialize_value(value)
 
 class Trace(BaseModel):
     trace_id: str
     name: str
     created_at: str
     duration: float
-    entries: List[TraceSpan]
+    trace_spans: List[TraceSpan]
     overwrite: bool = False
     offline_mode: bool = False
     rules: Optional[Dict[str, Any]] = None
     has_notification: Optional[bool] = False
+    customer_id: Optional[str] = None
+    tags: Optional[List[str]] = None
     
