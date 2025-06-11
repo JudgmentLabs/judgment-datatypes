@@ -5,7 +5,7 @@ import json
 import os
 import yaml
 from dataclasses import dataclass, field
-from typing import List, Union, Literal
+from typing import List, Union, Literal, Optional
 
 from judgeval.data import Example, Trace
 from judgeval.common.logger import debug, error, warning, info
