@@ -24,7 +24,6 @@ class EvalDataset:
                  examples: Optional[List[Example]] = None,
                  traces: Optional[List[Trace]] = None
                  ):
-        debug(f"Initializing EvalDataset with {len(examples)} examples")
         if not judgment_api_key:
             warning("No judgment_api_key provided")
         self.examples = examples or []
