@@ -1,0 +1,46 @@
+name: Update Submodules in Parent Repos
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - staging
+
+jobs:
+  trigger-submodule-updates:
+    # Only run if PR was actually merged (not just closed)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get branch name
+        id: branch-info
+        run: |
+          # Branch name is directly available from the PR event
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "Source branch: $BRANCH_NAME"
+      
+      # - name: Dispatch to judgeval repo
+      #   uses: peter-evans/repository-dispatch@v2
+      #   with:
+      #     token: ${{ secrets.REPO_DISPATCH_TOKEN }}
+      #     repository: JudgmentLabs/judgeval
+      #     event-type: update-submodule
+      #     client-payload: |
+      #       {
+      #         "branch_name": "${{ steps.branch-info.outputs.branch_name }}",
+      #         "target_branch": "staging",
+      #         "pr_number": "${{ github.event.pull_request.number }}"
+      #       }
+          
+      - name: Dispatch to judgment repo
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_DISPATCH_TOKEN }}
+          repository: JudgmentLabs/judgment
+          event-type: update-submodule
+          client-payload: |
+            {
+              "branch_name": "${{ steps.branch-info.outputs.branch_name }}",
+              "target_branch": "staging",
+              "pr_number": "${{ github.event.pull_request.number }}"
+            }
