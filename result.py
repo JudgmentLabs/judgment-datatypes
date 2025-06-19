@@ -1,6 +1,5 @@
-from dataclasses import dataclass
-from typing import List, Union, Optional, Dict, Any, Union
-from judgeval.common.logger import debug, error
+from typing import List, Union, Optional, Union
+from judgeval.common.logger import debug
 from pydantic import BaseModel
 from judgeval.data import ScorerData, Example, CustomExample
 from judgeval.data.trace import TraceSpan
